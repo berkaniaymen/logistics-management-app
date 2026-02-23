@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
-from app.database import engine
+from backend.app.database import engine
+
 
 app = FastAPI()
 
@@ -47,3 +48,18 @@ def create_shipment(shipment: ShipmentCreate):
         connection.commit()
 
     return {"message": "Shipment created successfully"}
+
+
+from fastapi import FastAPI
+from backend.app.routers import shipments
+
+app = FastAPI()
+app.include_router(shipments.router)
+
+from backend.app.database import Base, engine
+Base.metadata.create_all(bind=engine)
+from backend.app.routers import drivers
+app.include_router(drivers.router)
+from backend.app.routers import warehouses, customers
+app.include_router(warehouses.router)
+app.include_router(customers.router)
