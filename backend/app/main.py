@@ -55,7 +55,15 @@ from backend.app.routers import shipments
 
 app = FastAPI()
 app.include_router(shipments.router)
+from fastapi.responses import JSONResponse
+from fastapi import Request
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred"}
+    )
 from backend.app.database import Base, engine
 Base.metadata.create_all(bind=engine)
 from backend.app.routers import drivers

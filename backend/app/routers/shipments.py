@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app import models, schemas
 from backend.app.core.dependencies import get_current_user
+from backend.app.core.exceptions import NotFoundError
 
 router = APIRouter(prefix="/shipments", tags=["Shipments"])
 
-# CREATE - protected
 @router.post("/")
 def create_shipment(shipment: schemas.ShipmentCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     db_shipment = models.Shipment(**shipment.dict())
@@ -15,37 +15,33 @@ def create_shipment(shipment: schemas.ShipmentCreate, db: Session = Depends(get_
     db.refresh(db_shipment)
     return db_shipment
 
-# GET ALL - public
 @router.get("/")
 def get_shipments(db: Session = Depends(get_db)):
     return db.query(models.Shipment).all()
 
-# GET ONE - public
 @router.get("/{shipment_id}")
 def get_shipment(shipment_id: int, db: Session = Depends(get_db)):
     shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
     if not shipment:
-        raise HTTPException(status_code=404, detail="Shipment not found")
+        raise NotFoundError("Shipment")
     return shipment
 
-# UPDATE - protected
 @router.put("/{shipment_id}")
 def update_shipment(shipment_id: int, updated: schemas.ShipmentUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
     if not shipment:
-        raise HTTPException(status_code=404, detail="Shipment not found")
+        raise NotFoundError("Shipment")
     for key, value in updated.dict(exclude_unset=True).items():
         setattr(shipment, key, value)
     db.commit()
     db.refresh(shipment)
     return shipment
 
-# DELETE - protected
 @router.delete("/{shipment_id}")
 def delete_shipment(shipment_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
     if not shipment:
-        raise HTTPException(status_code=404, detail="Shipment not found")
+        raise NotFoundError("Shipment")
     db.delete(shipment)
     db.commit()
     return {"message": "Shipment deleted successfully"}
