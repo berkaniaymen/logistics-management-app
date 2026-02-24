@@ -89,3 +89,26 @@ class Customer(CustomerBase):
 
     class Config:
         from_attributes = True
+
+        # --- User Schemas ---
+class UserCreate(BaseModel):
+    email: str
+    username: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class User(BaseModel):
+    id: int
+    email: str
+    username: str
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

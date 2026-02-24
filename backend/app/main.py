@@ -63,3 +63,5 @@ app.include_router(drivers.router)
 from backend.app.routers import warehouses, customers
 app.include_router(warehouses.router)
 app.include_router(customers.router)
+from backend.app.routers import auth
+app.include_router(auth.router)
