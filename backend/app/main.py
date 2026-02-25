@@ -53,7 +53,27 @@ def create_shipment(shipment: ShipmentCreate):
 from fastapi import FastAPI
 from backend.app.routers import shipments
 
-app = FastAPI()
+app = FastAPI(
+    title="Logistics Management API",
+    description="""
+    A professional logistics management system API.
+    
+    ## Features
+    * **Shipments** — Full CRUD for managing shipments
+    * **Drivers** — Manage drivers and assign shipments
+    * **Warehouses** — Manage warehouse locations
+    * **Customers** — Manage customer records
+    * **Authentication** — JWT-based secure login system
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Aymen Berkani",
+        "email": "your-email@example.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
+)
 app.include_router(shipments.router)
 from fastapi.responses import JSONResponse
 from fastapi import Request
