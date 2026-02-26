@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from backend.app.database import engine
-
-
+from backend.app import models
+Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 @app.get("/")
