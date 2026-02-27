@@ -5,9 +5,6 @@ from backend.app.database import Base, engine
 from backend.app import models
 from backend.app.routers import shipments, drivers, warehouses, customers, auth
 
-# Create all database tables
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title="Logistics Management API",
     description="""
@@ -30,7 +27,7 @@ app = FastAPI(
     },
 )
 
-# CORS
+# CORS must be added before anything else
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,6 +35,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create all database tables
+Base.metadata.create_all(bind=engine)
 
 # Register routers
 app.include_router(shipments.router)
