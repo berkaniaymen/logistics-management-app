@@ -9,7 +9,7 @@ export default function Shipments() {
 
   const fetchShipments = async () => {
     try {
-      const response = await api.get('/shipments')
+      const response = await api.get('/shipments/')  // added trailing slash
       setShipments(response.data)
     } catch (err) {
       console.error('Failed to fetch shipments', err)
@@ -22,7 +22,7 @@ export default function Shipments() {
 
   const handleCreate = async () => {
     try {
-      await api.post('/shipments', newShipment)
+      await api.post('/shipments/', newShipment)  // added trailing slash
       setNewShipment({ origin: '', destination: '', status: 'pending' })
       setShowForm(false)
       fetchShipments()

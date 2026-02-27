@@ -11,11 +11,19 @@ export default function Login() {
       const formData = new FormData()
       formData.append('username', email)
       formData.append('password', password)
-
-      const response = await api.post('/auth/login', formData)
-      localStorage.setItem('token', response.data.access_token)
+  
+      const response = await api.post('/auth/login', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      console.log('Login response:', response.data)
+      const token = response.data.access_token
+      localStorage.setItem('token', token)
       window.location.href = '/dashboard'
     } catch (err) {
+      console.error('Login error:', err)
       setError('Invalid email or password')
     }
   }
