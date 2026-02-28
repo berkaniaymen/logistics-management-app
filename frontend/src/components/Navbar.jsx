@@ -10,6 +10,9 @@ export default function Navbar() {
         <div className="flex gap-6">
           <a href="/dashboard" className="hover:text-blue-200 transition">Dashboard</a>
           <a href="/shipments" className="hover:text-blue-200 transition">Shipments</a>
+          <a href="/loads" className="hover:text-blue-200 transition">Loads</a>
+          <a href="/driver" className="hover:text-blue-200 transition">Driver View</a>
+          <a href="/detention" className="hover:text-blue-200 transition">Detention</a>
           <button
             onClick={handleLogout}
             className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 transition"
