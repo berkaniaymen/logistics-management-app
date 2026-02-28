@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 
@@ -112,3 +113,57 @@ class User(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+# --- Load Schemas ---
+class LoadBase(BaseModel):
+    load_number: str
+    shipper_name: str
+    shipper_address: str
+    driver_id: Optional[int] = None
+    shipment_id: Optional[int] = None
+
+class LoadCreate(LoadBase):
+    pass
+
+class LoadUpdate(BaseModel):
+    load_number: Optional[str] = None
+    shipper_name: Optional[str] = None
+    shipper_address: Optional[str] = None
+    driver_id: Optional[int] = None
+    status: Optional[str] = None
+
+class Load(LoadBase):
+    id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Detention Schemas ---
+class DetentionCheckin(BaseModel):
+    load_id: int
+    driver_id: int
+    free_time_minutes: Optional[int] = 120
+    detention_rate: Optional[float] = 50.0
+    notes: Optional[str] = None
+
+class DetentionCheckout(BaseModel):
+    notes: Optional[str] = None
+
+class DetentionEvent(BaseModel):
+    id: int
+    load_id: int
+    driver_id: int
+    checkin_time: datetime
+    checkout_time: Optional[datetime] = None
+    free_time_minutes: int
+    detention_rate: float
+    detention_minutes: int
+    detention_amount: float
+    status: str
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True

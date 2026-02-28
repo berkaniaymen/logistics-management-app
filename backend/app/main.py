@@ -57,3 +57,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/")
 def root():
     return {"message": "Logistics API running 🚀"}
+
+from backend.app.routers import loads, detention
+app.include_router(loads.router)
+app.include_router(detention.router)
