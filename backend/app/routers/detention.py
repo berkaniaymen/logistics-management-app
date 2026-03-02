@@ -17,7 +17,7 @@ def calculate_detention(checkin: datetime, checkout: datetime,
     detention_amount = round((detention_minutes / 60) * rate, 2)
     return detention_minutes, detention_amount
 
-@router.post("/checkin")
+@router.post("/checkin/")
 def checkin(data: schemas.DetentionCheckin, db: Session = Depends(get_db),
             current_user=Depends(get_current_user)):
     load = db.query(models.Load).filter(models.Load.id == data.load_id).first()
@@ -38,7 +38,7 @@ def checkin(data: schemas.DetentionCheckin, db: Session = Depends(get_db),
     db.refresh(event)
     return event
 
-@router.post("/checkout/{event_id}")
+@router.post("/checkout/{event_id}/")
 def checkout(event_id: int, data: schemas.DetentionCheckout,
              db: Session = Depends(get_db),
              current_user=Depends(get_current_user)):
@@ -103,11 +103,11 @@ def get_by_driver(driver_id: int, db: Session = Depends(get_db),
 @router.get("/{event_id}/report")
 def generate_report(event_id: int, db: Session = Depends(get_db),
                     current_user=Depends(get_current_user)):
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
+    from reportlab.lib.pagesizes import letter # type: ignore
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle # type: ignore
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib import colors
-    from reportlab.lib.units import inch
+    from reportlab.lib.units import inch # type: ignore # type: ignore
 
     event = db.query(models.DetentionEvent).filter(
         models.DetentionEvent.id == event_id).first()
