@@ -1,6 +1,6 @@
-# 🚚 Logistics Management App
+# 🚚 Logistics Management App — Detention Tracker
 
-A full-stack logistics management system built with **FastAPI** and **React**. This project demonstrates production-style backend architecture, JWT authentication, and a modern React dashboard — deployed live with Railway and Vercel.
+A full-stack logistics management system with a **Detention Time Tracker** — solving a billion-dollar problem in the trucking industry. Built with **FastAPI** and **React**, deployed live on Railway and Vercel.
 
 ## 🌐 Live Demo
 
@@ -9,19 +9,41 @@ A full-stack logistics management system built with **FastAPI** and **React**. T
 | 🖥️ Frontend | [logistics-management-app.vercel.app](https://logistics-management-app.vercel.app) |
 | 🔌 API | [web-production-bd20b.up.railway.app](https://web-production-bd20b.up.railway.app) |
 | 📄 API Docs | [web-production-bd20b.up.railway.app/docs](https://web-production-bd20b.up.railway.app/docs) |
+| 💻 GitHub | [github.com/berkaniaymen/logistics-management-app](https://github.com/berkaniaymen/logistics-management-app) |
+
+---
+
+## 🚛 The Problem We Solve
+
+Truck drivers lose **$11,000–$19,000 per year** in unpaid detention fees. When a driver arrives at a shipper or receiver, they get 2 hours of free waiting time. After that, they are owed detention pay — but brokers dispute claims because there is no timestamped proof.
+
+**Our solution:** A simple check-in/check-out system that automatically tracks detention time, calculates the amount owed, and generates a professional PDF report with server-side timestamps that drivers can send directly to brokers.
 
 ---
 
 ## ✨ Features
 
-- 📦 **Shipments** — Full CRUD with status tracking (Pending, In Transit, Delivered)
-- 🚗 **Drivers** — Manage drivers and assign them to shipments
-- 🏢 **Warehouses** — Manage warehouse locations and capacity
-- 👥 **Customers** — Manage customer records
-- 🔐 **Authentication** — JWT-based login system with password hashing
-- 🛡️ **Protected Routes** — Secure endpoints requiring valid tokens
-- 📊 **Dashboard** — Overview of all system statistics
-- 🌍 **Deployed** — Live backend on Railway, frontend on Vercel
+### 🔐 Authentication
+- JWT-based login system
+- Password hashing with Argon2
+- Protected routes
+
+### 📦 Core Logistics
+- **Shipments** — Full CRUD with status tracking
+- **Drivers** — Manage drivers and assign shipments
+- **Warehouses** — Manage warehouse locations
+- **Customers** — Manage customer records
+
+### 🚛 Detention Tracker
+- **Loads Manager** — Create and assign loads to drivers with shipper details
+- **Driver View** — One-tap check-in/check-out with live countdown timer
+- **Real-time Alerts** — Browser notification when 2-hour free time expires
+- **Automatic Calculation** — Detention minutes and dollar amount calculated server-side
+- **Dispatcher Dashboard** — Live view of all active detentions with elapsed time
+- **PDF Report Generator** — Professional timestamped detention reports for broker disputes
+
+### 📊 Dashboard
+- Overview of all shipments, drivers, warehouses, and customers
 
 ---
 
@@ -31,96 +53,72 @@ A full-stack logistics management system built with **FastAPI** and **React**. T
 logistics-management-app/
 ├── backend/
 │   └── app/
-│       ├── main.py              # FastAPI entry point
-│       ├── database.py          # SQLAlchemy setup
-│       ├── models.py            # Database models
-│       ├── schemas.py           # Pydantic schemas
+│       ├── main.py
+│       ├── database.py
+│       ├── models.py
+│       ├── schemas.py
 │       ├── routers/
 │       │   ├── shipments.py
 │       │   ├── drivers.py
 │       │   ├── warehouses.py
 │       │   ├── customers.py
-│       │   └── auth.py
-│       ├── services/
+│       │   ├── auth.py
+│       │   ├── loads.py
+│       │   └── detention.py
 │       └── core/
-│           ├── config.py        # Pydantic settings
-│           ├── security.py      # JWT + password hashing
-│           ├── dependencies.py  # Auth dependency
-│           └── exceptions.py    # Custom exceptions
+│           ├── config.py
+│           ├── security.py
+│           ├── dependencies.py
+│           └── exceptions.py
 ├── frontend/
 │   └── src/
-│       ├── api/
-│       │   └── axios.js         # Axios configuration
+│       ├── api/axios.js
 │       ├── pages/
 │       │   ├── Login.jsx
 │       │   ├── Dashboard.jsx
-│       │   └── Shipments.jsx
+│       │   ├── Shipments.jsx
+│       │   ├── LoadsManager.jsx
+│       │   ├── DriverView.jsx
+│       │   └── DetentionDashboard.jsx
 │       └── components/
 │           └── Navbar.jsx
 ├── requirements.txt
 ├── Procfile
-└── .env                         # Not committed
+└── vercel.json
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-| Technology | Purpose |
-|-----------|---------|
-| FastAPI | REST API framework |
-| PostgreSQL | Relational database |
-| SQLAlchemy | ORM |
-| Pydantic | Data validation |
-| python-jose | JWT tokens |
-| passlib (argon2) | Password hashing |
-| uvicorn | ASGI server |
-
-### Frontend
-| Technology | Purpose |
-|-----------|---------|
-| React | UI framework |
-| Vite | Build tool |
-| Tailwind CSS | Styling |
-| Axios | HTTP client |
-| React Router | Client-side routing |
-
-### Infrastructure
-| Service | Purpose |
-|---------|---------|
-| Railway | Backend + PostgreSQL hosting |
-| Vercel | Frontend hosting |
-| GitHub | Version control |
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI (Python) |
+| Database | PostgreSQL |
+| ORM | SQLAlchemy |
+| Validation | Pydantic |
+| Auth | JWT + Argon2 |
+| PDF Generation | ReportLab |
+| Frontend | React + Vite |
+| Styling | Tailwind CSS |
+| HTTP Client | Axios |
+| Routing | React Router |
+| Backend Hosting | Railway |
+| Frontend Hosting | Vercel |
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- PostgreSQL
-
 ### Backend Setup
 
 ```bash
-# Clone the repository
 git clone https://github.com/berkaniaymen/logistics-management-app.git
 cd logistics-management-app
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Create .env file
-touch .env
 ```
 
-Add these variables to your `.env` file:
+Create `.env` file:
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/yourdb
 SECRET_KEY=your-secret-key
@@ -129,78 +127,59 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 ```bash
-# Run the backend
 uvicorn backend.app.main:app --reload
 ```
-
-API will be available at `http://127.0.0.1:8000`
-API docs at `http://127.0.0.1:8000/docs`
 
 ### Frontend Setup
 
 ```bash
-# Navigate to frontend
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
-
-Frontend will be available at `http://localhost:5173`
 
 ---
 
 ## 📡 API Endpoints
 
+### Detention Tracker
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/loads/` | Create a load |
+| GET | `/loads/` | Get all loads |
+| POST | `/detention/checkin` | Driver checks in — starts timer |
+| POST | `/detention/checkout/{id}` | Driver checks out — calculates detention |
+| GET | `/detention/active` | All active detentions with live timers |
+| GET | `/detention/{id}/report` | Download detention PDF report |
+
 ### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/auth/register` | Register a new user |
-| POST | `/auth/login` | Login and get JWT token |
-
-### Shipments
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/shipments/` | Get all shipments | No |
-| GET | `/shipments/{id}` | Get one shipment | No |
-| POST | `/shipments/` | Create a shipment | ✅ Yes |
-| PUT | `/shipments/{id}` | Update a shipment | ✅ Yes |
-| DELETE | `/shipments/{id}` | Delete a shipment | ✅ Yes |
-
-### Drivers
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/drivers/` | Get all drivers |
-| GET | `/drivers/{id}` | Get one driver |
-| POST | `/drivers/` | Create a driver |
-| PUT | `/drivers/{id}` | Update a driver |
-| DELETE | `/drivers/{id}` | Delete a driver |
-| PUT | `/drivers/{id}/assign/{shipment_id}` | Assign shipment to driver |
-
-### Warehouses & Customers
-Same CRUD pattern as Drivers.
+| POST | `/auth/register` | Register |
+| POST | `/auth/login` | Login — returns JWT |
 
 ---
 
-## 🔐 Authentication Flow
+## 💰 Business Model
 
-1. Register via `POST /auth/register`
-2. Login via `POST /auth/login` — returns a JWT token
-3. Include token in request headers: `Authorization: Bearer <token>`
-4. Protected routes will return `401 Unauthorized` without a valid token
+| Plan | Price | Target |
+|------|-------|--------|
+| Free | $0/month | Individual drivers |
+| Pro | $9/month | Owner-operators |
+| Fleet | $49/month | Small fleets (5-20 trucks) |
+| Enterprise | Custom | Large carriers |
+
+**Revenue potential:** 500 fleet customers x $49/month = **$294,000/year**
 
 ---
 
 ## 👨‍💻 Author
 
 **Aymen Berkani**
-- GitHub: [@berkaniaymen](https://github.com/berkaniaymen)
+- GitHub: [@berkaniaymen](https://github.com/berkaniaymen/logistics-management-app)
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+MIT License
