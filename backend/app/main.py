@@ -25,6 +25,7 @@ app = FastAPI(
     license_info={
         "name": "MIT",
     },
+    redirect_slashes=False,
 )
 
 # CORS must be added before anything else
