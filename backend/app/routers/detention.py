@@ -180,3 +180,83 @@ def generate_report(event_id: int, db: Session = Depends(get_db),
     buffer.seek(0)
     return StreamingResponse(buffer, media_type="application/pdf",
                              headers={"Content-Disposition": f"attachment; filename=detention-report-{event_id}.pdf"})
+
+@router.get("/stats/summary")
+def get_stats(db: Session = Depends(get_db),
+              current_user=Depends(get_current_user)):
+    from sqlalchemy import func
+    
+    total_events = db.query(models.DetentionEvent).count()
+    completed_events = db.query(models.DetentionEvent).filter(
+        models.DetentionEvent.status == "completed").count()
+    active_events = db.query(models.DetentionEvent).filter(
+        models.DetentionEvent.status == "active").count()
+    
+    total_amount = db.query(func.sum(models.DetentionEvent.detention_amount)).scalar() or 0
+    total_minutes = db.query(func.sum(models.DetentionEvent.detention_minutes)).scalar() or 0
+    avg_detention = db.query(func.avg(models.DetentionEvent.detention_minutes)).scalar() or 0
+    
+    total_loads = db.query(models.Load).count()
+    pending_loads = db.query(models.Load).filter(models.Load.status == "pending").count()
+    completed_loads = db.query(models.Load).filter(models.Load.status == "completed").count()
+    
+    total_shipments = db.query(models.Shipment).count()
+    total_drivers = db.query(models.Driver).count()
+    total_customers = db.query(models.Customer).count()
+    total_warehouses = db.query(models.Warehouse).count()
+
+    recent_events = db.query(models.DetentionEvent).order_by(
+        models.DetentionEvent.id.desc()).limit(10).all()
+
+    shipper_stats = []
+    loads = db.query(models.Load).all()
+    shipper_map = {}
+    for load in loads:
+        events = db.query(models.DetentionEvent).filter(
+            models.DetentionEvent.load_id == load.id).all()
+        for event in events:
+            if load.shipper_name not in shipper_map:
+                shipper_map[load.shipper_name] = {
+                    "shipper": load.shipper_name,
+                    "total_detention_minutes": 0,
+                    "total_amount": 0,
+                    "events": 0
+                }
+            shipper_map[load.shipper_name]["total_detention_minutes"] += event.detention_minutes
+            shipper_map[load.shipper_name]["total_amount"] += event.detention_amount
+            shipper_map[load.shipper_name]["events"] += 1
+    shipper_stats = list(shipper_map.values())
+
+    return {
+        "detention": {
+            "total_events": total_events,
+            "completed_events": completed_events,
+            "active_events": active_events,
+            "total_amount": round(total_amount, 2),
+            "total_minutes": total_minutes,
+            "avg_detention_minutes": round(avg_detention, 1),
+        },
+        "loads": {
+            "total": total_loads,
+            "pending": pending_loads,
+            "completed": completed_loads,
+        },
+        "overview": {
+            "total_shipments": total_shipments,
+            "total_drivers": total_drivers,
+            "total_customers": total_customers,
+            "total_warehouses": total_warehouses,
+        },
+        "recent_events": [
+            {
+                "id": e.id,
+                "load_id": e.load_id,
+                "driver_id": e.driver_id,
+                "detention_minutes": e.detention_minutes,
+                "detention_amount": e.detention_amount,
+                "status": e.status,
+                "checkin_time": e.checkin_time,
+            } for e in recent_events
+        ],
+        "shipper_stats": shipper_stats,
+    }
