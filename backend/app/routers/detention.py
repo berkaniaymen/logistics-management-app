@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app import models, schemas
-from backend.app.core.dependencies import get_current_user
+from backend.app.core.dependencies import get_current_user, require_dispatcher, require_driver
 from backend.app.core.exceptions import NotFoundError
 from datetime import datetime, timezone
 import io
@@ -19,10 +19,19 @@ def calculate_detention(checkin: datetime, checkout: datetime,
 
 @router.post("/checkin/")
 def checkin(data: schemas.DetentionCheckin, db: Session = Depends(get_db),
-            current_user=Depends(get_current_user)):
+            current_user=Depends(require_driver)):
+    # Driver can only check in for themselves
+    if current_user.driver_id != data.driver_id:
+        raise HTTPException(status_code=403, detail="You can only check in for yourself")
+
     load = db.query(models.Load).filter(models.Load.id == data.load_id).first()
     if not load:
         raise NotFoundError("Load")
+
+    # Driver can only check in on loads assigned to them
+    if load.driver_id != current_user.driver_id:
+        raise HTTPException(status_code=403, detail="This load is not assigned to you")
+
     event = models.DetentionEvent(
         load_id=data.load_id,
         driver_id=data.driver_id,
@@ -41,11 +50,16 @@ def checkin(data: schemas.DetentionCheckin, db: Session = Depends(get_db),
 @router.post("/checkout/{event_id}/")
 def checkout(event_id: int, data: schemas.DetentionCheckout,
              db: Session = Depends(get_db),
-             current_user=Depends(get_current_user)):
+             current_user=Depends(require_driver)):
     event = db.query(models.DetentionEvent).filter(
         models.DetentionEvent.id == event_id).first()
     if not event:
         raise NotFoundError("Detention event")
+
+    # Driver can only check out their own events
+    if event.driver_id != current_user.driver_id:
+        raise HTTPException(status_code=403, detail="You can only check out your own events")
+
     checkout_time = datetime.now(timezone.utc)
     detention_minutes, detention_amount = calculate_detention(
         event.checkin_time, checkout_time,
@@ -63,7 +77,8 @@ def checkout(event_id: int, data: schemas.DetentionCheckout,
 
 @router.get("/active")
 def get_active(db: Session = Depends(get_db),
-               current_user=Depends(get_current_user)):
+               current_user=Depends(require_dispatcher)):
+    # Only dispatchers see all active detentions
     events = db.query(models.DetentionEvent).filter(
         models.DetentionEvent.status == "active").all()
     result = []
@@ -71,8 +86,7 @@ def get_active(db: Session = Depends(get_db),
         now = datetime.now(timezone.utc)
         checkin = event.checkin_time
         if checkin.tzinfo is None:
-            from datetime import timezone as tz
-            checkin = checkin.replace(tzinfo=tz.utc)
+            checkin = checkin.replace(tzinfo=timezone.utc)
         elapsed_minutes = int((now - checkin).total_seconds() / 60)
         detention_minutes = max(0, elapsed_minutes - event.free_time_minutes)
         result.append({
@@ -91,12 +105,20 @@ def get_active(db: Session = Depends(get_db),
 @router.get("/load/{load_id}")
 def get_by_load(load_id: int, db: Session = Depends(get_db),
                 current_user=Depends(get_current_user)):
+    # Drivers can only see events for their own loads
+    if current_user.role == "driver":
+        load = db.query(models.Load).filter(models.Load.id == load_id).first()
+        if not load or load.driver_id != current_user.driver_id:
+            raise HTTPException(status_code=403, detail="Access denied")
     return db.query(models.DetentionEvent).filter(
         models.DetentionEvent.load_id == load_id).all()
 
 @router.get("/driver/{driver_id}")
 def get_by_driver(driver_id: int, db: Session = Depends(get_db),
                   current_user=Depends(get_current_user)):
+    # Drivers can only see their own history
+    if current_user.role == "driver" and current_user.driver_id != driver_id:
+        raise HTTPException(status_code=403, detail="You can only view your own detention history")
     return db.query(models.DetentionEvent).filter(
         models.DetentionEvent.driver_id == driver_id).all()
 
@@ -107,12 +129,16 @@ def generate_report(event_id: int, db: Session = Depends(get_db),
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle # type: ignore
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib import colors
-    from reportlab.lib.units import inch # type: ignore # type: ignore
+    from reportlab.lib.units import inch # type: ignore
 
     event = db.query(models.DetentionEvent).filter(
         models.DetentionEvent.id == event_id).first()
     if not event:
         raise NotFoundError("Detention event")
+
+    # Drivers can only download their own reports
+    if current_user.role == "driver" and event.driver_id != current_user.driver_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     driver = db.query(models.Driver).filter(
         models.Driver.id == event.driver_id).first()
@@ -183,23 +209,23 @@ def generate_report(event_id: int, db: Session = Depends(get_db),
 
 @router.get("/stats/summary")
 def get_stats(db: Session = Depends(get_db),
-              current_user=Depends(get_current_user)):
+              current_user=Depends(require_dispatcher)):
     from sqlalchemy import func
-    
+
     total_events = db.query(models.DetentionEvent).count()
     completed_events = db.query(models.DetentionEvent).filter(
         models.DetentionEvent.status == "completed").count()
     active_events = db.query(models.DetentionEvent).filter(
         models.DetentionEvent.status == "active").count()
-    
+
     total_amount = db.query(func.sum(models.DetentionEvent.detention_amount)).scalar() or 0
     total_minutes = db.query(func.sum(models.DetentionEvent.detention_minutes)).scalar() or 0
     avg_detention = db.query(func.avg(models.DetentionEvent.detention_minutes)).scalar() or 0
-    
+
     total_loads = db.query(models.Load).count()
     pending_loads = db.query(models.Load).filter(models.Load.status == "pending").count()
     completed_loads = db.query(models.Load).filter(models.Load.status == "completed").count()
-    
+
     total_shipments = db.query(models.Shipment).count()
     total_drivers = db.query(models.Driver).count()
     total_customers = db.query(models.Customer).count()
@@ -208,7 +234,6 @@ def get_stats(db: Session = Depends(get_db),
     recent_events = db.query(models.DetentionEvent).order_by(
         models.DetentionEvent.id.desc()).limit(10).all()
 
-    shipper_stats = []
     loads = db.query(models.Load).all()
     shipper_map = {}
     for load in loads:
@@ -225,7 +250,6 @@ def get_stats(db: Session = Depends(get_db),
             shipper_map[load.shipper_name]["total_detention_minutes"] += event.detention_minutes
             shipper_map[load.shipper_name]["total_amount"] += event.detention_amount
             shipper_map[load.shipper_name]["events"] += 1
-    shipper_stats = list(shipper_map.values())
 
     return {
         "detention": {
@@ -258,5 +282,5 @@ def get_stats(db: Session = Depends(get_db),
                 "checkin_time": e.checkin_time,
             } for e in recent_events
         ],
-        "shipper_stats": shipper_stats,
+        "shipper_stats": list(shipper_map.values()),
     }

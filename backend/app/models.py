@@ -4,6 +4,7 @@ from backend.app.database import Base
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float
 from sqlalchemy.sql import func
+
 class Driver(Base):
     __tablename__ = "drivers"
     id = Column(Integer, primary_key=True, index=True)
@@ -30,6 +31,7 @@ class Customer(Base):
     email = Column(String, unique=True)
     phone = Column(String)
     shipments = relationship("Shipment", back_populates="customer")
+
 class User(Base):
     __tablename__ = "users"
 
@@ -38,7 +40,8 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-
+    role = Column(String, default="dispatcher")  # "dispatcher" or "driver"
+    driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=True)
 
 class Shipment(Base):
     __tablename__ = "shipments"
@@ -53,9 +56,6 @@ class Shipment(Base):
     driver = relationship("Driver", back_populates="shipments")
     warehouse = relationship("Warehouse", back_populates="shipments")
     customer = relationship("Customer", back_populates="shipments")
-
-    from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float
-from sqlalchemy.sql import func
 
 class Load(Base):
     __tablename__ = "loads"

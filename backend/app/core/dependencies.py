@@ -18,3 +18,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+def require_dispatcher(current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "dispatcher":
+        raise HTTPException(status_code=403, detail="Dispatcher access required")
+    return current_user
+
+def require_driver(current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "driver":
+        raise HTTPException(status_code=403, detail="Driver access required")
+    return current_user

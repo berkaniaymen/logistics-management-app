@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app import models, schemas
-from backend.app.core.dependencies import get_current_user
+from backend.app.core.dependencies import get_current_user, require_dispatcher
 from backend.app.core.exceptions import NotFoundError
 
 router = APIRouter(prefix="/loads", tags=["Loads"])
 
 @router.post("/")
 def create_load(load: schemas.LoadCreate, db: Session = Depends(get_db),
-                current_user=Depends(get_current_user)):
+                current_user=Depends(require_dispatcher)):
     db_load = models.Load(**load.dict())
     db.add(db_load)
     db.commit()
@@ -19,6 +19,10 @@ def create_load(load: schemas.LoadCreate, db: Session = Depends(get_db),
 @router.get("/")
 def get_loads(db: Session = Depends(get_db),
               current_user=Depends(get_current_user)):
+    # Drivers only see their own loads
+    if current_user.role == "driver":
+        return db.query(models.Load).filter(
+            models.Load.driver_id == current_user.driver_id).all()
     return db.query(models.Load).all()
 
 @router.get("/{load_id}")
@@ -27,12 +31,15 @@ def get_load(load_id: int, db: Session = Depends(get_db),
     load = db.query(models.Load).filter(models.Load.id == load_id).first()
     if not load:
         raise NotFoundError("Load")
+    if current_user.role == "driver" and load.driver_id != current_user.driver_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Access denied")
     return load
 
 @router.put("/{load_id}")
 def update_load(load_id: int, updated: schemas.LoadUpdate,
                 db: Session = Depends(get_db),
-                current_user=Depends(get_current_user)):
+                current_user=Depends(require_dispatcher)):
     load = db.query(models.Load).filter(models.Load.id == load_id).first()
     if not load:
         raise NotFoundError("Load")
@@ -44,7 +51,7 @@ def update_load(load_id: int, updated: schemas.LoadUpdate,
 
 @router.delete("/{load_id}")
 def delete_load(load_id: int, db: Session = Depends(get_db),
-                current_user=Depends(get_current_user)):
+                current_user=Depends(require_dispatcher)):
     load = db.query(models.Load).filter(models.Load.id == load_id).first()
     if not load:
         raise NotFoundError("Load")

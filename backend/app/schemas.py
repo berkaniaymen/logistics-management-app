@@ -96,6 +96,8 @@ class UserCreate(BaseModel):
     email: str
     username: str
     password: str
+    role: Optional[str] = "dispatcher"
+    driver_id: Optional[int] = None 
 
 class UserLogin(BaseModel):
     email: str
@@ -106,6 +108,10 @@ class User(BaseModel):
     email: str
     username: str
     is_active: bool
+    role: str
+    driver_id: Optional[int] = None
+    class Config:
+        from_attributes = True
 
     class Config:
         from_attributes = True
@@ -167,3 +173,9 @@ class DetentionEvent(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CreateDriverAccount(BaseModel):
+    email: str
+    username: str
+    password: str
+    driver_id: int
