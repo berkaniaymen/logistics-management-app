@@ -11,16 +11,32 @@ function PrivateRoute({ children }) {
   return token ? children : <Navigate to="/" />
 }
 
+function DispatcherRoute({ children }) {
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
+  if (!token) return <Navigate to="/" />
+  if (role !== 'dispatcher') return <Navigate to="/driver" />
+  return children
+}
+
+function DriverRoute({ children }) {
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
+  if (!token) return <Navigate to="/" />
+  if (role !== 'driver') return <Navigate to="/dashboard" />
+  return children
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/shipments" element={<PrivateRoute><Shipments /></PrivateRoute>} />
-        <Route path="/driver" element={<PrivateRoute><DriverView /></PrivateRoute>} />
-        <Route path="/loads" element={<PrivateRoute><LoadsManager /></PrivateRoute>} />
-        <Route path="/detention" element={<PrivateRoute><DetentionDashboard /></PrivateRoute>} />
+        <Route path="/dashboard" element={<DispatcherRoute><Dashboard /></DispatcherRoute>} />
+        <Route path="/shipments" element={<DispatcherRoute><Shipments /></DispatcherRoute>} />
+        <Route path="/loads" element={<DispatcherRoute><LoadsManager /></DispatcherRoute>} />
+        <Route path="/detention" element={<DispatcherRoute><DetentionDashboard /></DispatcherRoute>} />
+        <Route path="/driver" element={<DriverRoute><DriverView /></DriverRoute>} />
       </Routes>
     </BrowserRouter>
   )
