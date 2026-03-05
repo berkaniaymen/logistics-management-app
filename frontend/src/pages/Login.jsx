@@ -1,14 +1,6 @@
 import { useState } from 'react'
 import api from '../api/axios'
 
-function parseJwt(token) {
-  try {
-    return JSON.parse(atob(token.split('.')[1]))
-  } catch {
-    return null
-  }
-}
-
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,20 +17,23 @@ export default function Login() {
       })
 
       const token = response.data.access_token
-      const payload = parseJwt(token)
+
+      // Decode JWT payload
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+      const payload = JSON.parse(window.atob(base64))
 
       localStorage.setItem('token', token)
-      localStorage.setItem('role', payload?.role || 'dispatcher')
-      if (payload?.driver_id) {
-        localStorage.setItem('driver_id', payload.driver_id)
+      localStorage.setItem('role', payload.role || 'dispatcher')
+      if (payload.driver_id) {
+        localStorage.setItem('driver_id', String(payload.driver_id))
       }
 
-      // Redirect based on role
-      if (payload?.role === 'driver') {
+      if (payload.role === 'driver') {
         window.location.href = '/driver'
       } else {
         window.location.href = '/dashboard'
       }
+
     } catch (err) {
       console.error('Login error:', err)
       setError('Invalid email or password')

@@ -6,24 +6,27 @@ import DriverView from './pages/DriverView'
 import LoadsManager from './pages/LoadsManager'
 import DetentionDashboard from './pages/DetentionDashboard'
 
+function getRole() {
+  try { return localStorage.getItem('role') } catch { return null }
+}
+
+function getToken() {
+  try { return localStorage.getItem('token') } catch { return null }
+}
+
 function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token')
-  return token ? children : <Navigate to="/" />
+  return getToken() ? children : <Navigate to="/" />
 }
 
 function DispatcherRoute({ children }) {
-  const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
-  if (!token) return <Navigate to="/" />
-  if (role !== 'dispatcher') return <Navigate to="/driver" />
+  if (!getToken()) return <Navigate to="/" />
+  if (getRole() !== 'dispatcher') return <Navigate to="/driver" />
   return children
 }
 
 function DriverRoute({ children }) {
-  const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
-  if (!token) return <Navigate to="/" />
-  if (role !== 'driver') return <Navigate to="/dashboard" />
+  if (!getToken()) return <Navigate to="/" />
+  if (getRole() !== 'driver') return <Navigate to="/dashboard" />
   return children
 }
 
