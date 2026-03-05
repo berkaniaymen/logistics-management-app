@@ -6,28 +6,9 @@ import DriverView from './pages/DriverView'
 import LoadsManager from './pages/LoadsManager'
 import DetentionDashboard from './pages/DetentionDashboard'
 
-function getRole() {
-  try { return localStorage.getItem('role') } catch { return null }
-}
-
-function getToken() {
-  try { return localStorage.getItem('token') } catch { return null }
-}
-
 function PrivateRoute({ children }) {
-  return getToken() ? children : <Navigate to="/" />
-}
-
-function DispatcherRoute({ children }) {
-  if (!getToken()) return <Navigate to="/" />
-  if (getRole() !== 'dispatcher') return <Navigate to="/driver" />
-  return children
-}
-
-function DriverRoute({ children }) {
-  if (!getToken()) return <Navigate to="/" />
-  if (getRole() !== 'driver') return <Navigate to="/dashboard" />
-  return children
+  const token = localStorage.getItem('token')
+  return token ? children : <Navigate to="/" />
 }
 
 export default function App() {
@@ -35,11 +16,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<DispatcherRoute><Dashboard /></DispatcherRoute>} />
-        <Route path="/shipments" element={<DispatcherRoute><Shipments /></DispatcherRoute>} />
-        <Route path="/loads" element={<DispatcherRoute><LoadsManager /></DispatcherRoute>} />
-        <Route path="/detention" element={<DispatcherRoute><DetentionDashboard /></DispatcherRoute>} />
-        <Route path="/driver" element={<DriverRoute><DriverView /></DriverRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/shipments" element={<PrivateRoute><Shipments /></PrivateRoute>} />
+        <Route path="/loads" element={<PrivateRoute><LoadsManager /></PrivateRoute>} />
+        <Route path="/detention" element={<PrivateRoute><DetentionDashboard /></PrivateRoute>} />
+        <Route path="/driver" element={<PrivateRoute><DriverView /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   )
