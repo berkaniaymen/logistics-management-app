@@ -7,7 +7,10 @@ export default function Login() {
   const [error, setError] = useState('')
 
   const handleLogin = async () => {
+    alert('clicked')  // add this
+    console.log('email:', email, 'password:', password)
     try {
+        
       const formData = new FormData()
       formData.append('username', email)
       formData.append('password', password)
