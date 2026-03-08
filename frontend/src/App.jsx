@@ -5,6 +5,7 @@ import Shipments from './pages/Shipments'
 import DriverView from './pages/DriverView'
 import LoadsManager from './pages/LoadsManager'
 import DetentionDashboard from './pages/DetentionDashboard'
+import CreateDriverAccount from './pages/CreateDriverAccount'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -21,7 +22,9 @@ export default function App() {
         <Route path="/loads" element={<PrivateRoute><LoadsManager /></PrivateRoute>} />
         <Route path="/detention" element={<PrivateRoute><DetentionDashboard /></PrivateRoute>} />
         <Route path="/driver" element={<PrivateRoute><DriverView /></PrivateRoute>} />
+        <Route path="/create-driver" element={<PrivateRoute><CreateDriverAccount /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   )
 }
+
