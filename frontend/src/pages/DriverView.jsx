@@ -8,12 +8,13 @@ export default function DriverView() {
   const [elapsed, setElapsed] = useState(0)
   const [loading, setLoading] = useState(false)
   const [selectedLoad, setSelectedLoad] = useState('')
-  const [driverId, setDriverId] = useState(1)
+
+  const driverId = parseInt(localStorage.getItem('driver_id'))
 
   const fetchLoads = async () => {
     try {
       const res = await api.get('/loads/')
-      setLoads(res.data.filter(l => l.status === 'pending'))
+      setLoads(res.data.filter((l) => l.status === 'pending'))
     } catch (err) {
       console.error(err)
     }
@@ -22,9 +23,10 @@ export default function DriverView() {
   const fetchActive = async () => {
     try {
       const res = await api.get('/detention/active')
-      if (res.data.length > 0) {
-        setActiveEvent(res.data[0])
-        setElapsed(res.data[0].elapsed_minutes)
+      const mine = res.data.find((e) => e.driver_id === driverId)
+      if (mine) {
+        setActiveEvent(mine)
+        setElapsed(mine.elapsed_minutes)
       } else {
         setActiveEvent(null)
       }
@@ -41,20 +43,18 @@ export default function DriverView() {
   useEffect(() => {
     if (!activeEvent) return
     const interval = setInterval(() => {
-      setElapsed(prev => prev + 1)
+      setElapsed((prev) => prev + 1)
     }, 60000)
     return () => clearInterval(interval)
   }, [activeEvent])
 
   useEffect(() => {
     if (activeEvent) {
-      const freeTime = activeEvent.free_time_remaining
-      if (freeTime === 0) {
-        if (Notification.permission === 'granted') {
-          new Notification('Detention Started!', {
-            body: 'Free time has expired. Detention clock is now running.',
-          })
-        }
+      const freeTimeRemaining = Math.max(0, activeEvent.free_time_minutes - elapsed)
+      if (freeTimeRemaining === 0 && Notification.permission === 'granted') {
+        new Notification('Detention Started!', {
+          body: 'Free time has expired. Detention clock is now running.',
+        })
       }
     }
   }, [elapsed])
@@ -83,7 +83,7 @@ export default function DriverView() {
     if (!activeEvent) return
     setLoading(true)
     try {
-      await api.post(`/detention/checkout/${activeEvent.id}/`, {})
+      await api.post('/detention/checkout/' + activeEvent.id + '/', {})
       setActiveEvent(null)
       setElapsed(0)
       fetchLoads()
@@ -96,96 +96,107 @@ export default function DriverView() {
   const formatTime = (minutes) => {
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
-    return `${h}h ${m}m`
+    return h + 'h ' + m + 'm'
   }
 
   const freeTimeRemaining = activeEvent
-    ? Math.max(0, activeEvent.free_time_remaining - (elapsed - activeEvent.elapsed_minutes))
+    ? Math.max(0, activeEvent.free_time_minutes - elapsed)
     : 120
 
   const detentionMinutes = activeEvent
-    ? Math.max(0, elapsed - activeEvent.free_time_remaining)
+    ? Math.max(0, elapsed - activeEvent.free_time_minutes)
     : 0
 
-  const detentionAmount = activeEvent
-    ? ((detentionMinutes / 60) * 50).toFixed(2)
-    : '0.00'
-
+  const detentionAmount = ((detentionMinutes / 60) * 50).toFixed(2)
   const isInDetention = freeTimeRemaining === 0
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <Navbar />
-      <div className="p-8 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Driver View</h2>
+      <div className="p-8 max-w-xl mx-auto">
+
+        <div className="mb-8">
+          <h2 style={{ color: '#e2e8f0', fontSize: '24px', fontWeight: '700' }}>
+            Driver Portal
+          </h2>
+          <p style={{ color: '#8892a4' }} className="text-sm mt-1">
+            Check in when you arrive at a shipper. Check out when you leave.
+          </p>
+        </div>
 
         {!activeEvent ? (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-4">Select a Load to Check In</h3>
-            <select
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-              value={selectedLoad}
-              onChange={(e) => setSelectedLoad(e.target.value)}
-            >
-              <option value="">-- Select Load --</option>
-              {loads.map(load => (
-                <option key={load.id} value={load.id}>
-                  {load.load_number} — {load.shipper_name}
-                </option>
-              ))}
-            </select>
+          <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-6 space-y-4">
+            <h3 style={{ color: '#e2e8f0' }} className="font-semibold text-lg">
+              Select a Load to Check In
+            </h3>
+            {loads.length === 0 ? (
+              <div style={{ color: '#8892a4' }} className="text-sm py-4 text-center">
+                No loads assigned to you yet.
+              </div>
+            ) : (
+              <select
+                value={selectedLoad}
+                onChange={(e) => setSelectedLoad(e.target.value)}
+                style={{ background: '#0f1420', border: '1px solid #2a3147', color: '#e2e8f0' }}
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+              >
+                <option value="">-- Select Load --</option>
+                {loads.map((load) => (
+                  <option key={load.id} value={load.id}>
+                    {load.load_number} — {load.shipper_name}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               onClick={handleCheckin}
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-bold hover:bg-green-700 transition"
+              style={{ background: loading ? '#2a3147' : '#10b981' }}
+              className="w-full text-white font-bold py-3 rounded-xl text-lg hover:opacity-90 transition"
             >
               {loading ? 'Checking In...' : '✅ CHECK IN — I Have Arrived'}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className={`rounded-lg shadow p-6 text-white ${isInDetention ? 'bg-red-600' : 'bg-blue-600'}`}>
-              <div className="text-center">
-                <div className="text-sm uppercase tracking-wide mb-1">
-                  {isInDetention ? '🔴 DETENTION RUNNING' : '🟡 FREE TIME REMAINING'}
-                </div>
-                <div className="text-6xl font-bold my-4">
-                  {isInDetention ? formatTime(detentionMinutes) : formatTime(freeTimeRemaining)}
-                </div>
-                <div className="text-sm opacity-80">
-                  {isInDetention
-                    ? `Detention amount: $${detentionAmount}`
-                    : 'Free time — no charges yet'}
-                </div>
+            <div
+              style={{ background: isInDetention ? '#ef444420' : '#3b82f620', border: '1px solid ' + (isInDetention ? '#ef444440' : '#3b82f640') }}
+              className="rounded-xl p-6 text-center"
+            >
+              <div style={{ color: isInDetention ? '#f87171' : '#60a5fa' }} className="text-xs uppercase tracking-widest font-bold mb-2">
+                {isInDetention ? '🔴 DETENTION RUNNING' : '🟡 FREE TIME REMAINING'}
+              </div>
+              <div style={{ color: isInDetention ? '#f87171' : '#60a5fa' }} className="text-7xl font-bold my-4">
+                {isInDetention ? formatTime(detentionMinutes) : formatTime(freeTimeRemaining)}
+              </div>
+              <div style={{ color: '#8892a4' }} className="text-sm">
+                {isInDetention ? 'Detention amount: $' + detentionAmount : 'Free time — no charges yet'}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="font-semibold text-gray-700 mb-3">Session Details</h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Total elapsed time:</span>
-                  <span className="font-medium">{formatTime(elapsed)}</span>
+            <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-5 space-y-3">
+              <h3 style={{ color: '#e2e8f0' }} className="font-semibold">Session Details</h3>
+              {[
+                { label: 'Total elapsed time', value: formatTime(elapsed) },
+                { label: 'Free time allowed', value: '2 hours' },
+                { label: 'Detention rate', value: '$50.00/hour' },
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between text-sm" style={{ borderBottom: '1px solid #2a3147', paddingBottom: '8px' }}>
+                  <span style={{ color: '#8892a4' }}>{row.label}</span>
+                  <span style={{ color: '#e2e8f0' }} className="font-medium">{row.value}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Free time allowed:</span>
-                  <span className="font-medium">2 hours</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Detention rate:</span>
-                  <span className="font-medium">$50.00/hour</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold text-red-600 pt-2 border-t">
-                  <span>Amount owed:</span>
-                  <span>${detentionAmount}</span>
-                </div>
+              ))}
+              <div className="flex justify-between text-lg font-bold pt-1">
+                <span style={{ color: '#8892a4' }}>Amount owed</span>
+                <span style={{ color: '#f87171' }}>${detentionAmount}</span>
               </div>
             </div>
 
             <button
               onClick={handleCheckout}
               disabled={loading}
-              className="w-full bg-red-600 text-white py-3 rounded-lg text-lg font-bold hover:bg-red-700 transition"
+              style={{ background: loading ? '#2a3147' : '#ef4444' }}
+              className="w-full text-white font-bold py-3 rounded-xl text-lg hover:opacity-90 transition"
             >
               {loading ? 'Checking Out...' : '🚛 CHECK OUT — I Am Leaving'}
             </button>

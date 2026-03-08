@@ -13,6 +13,7 @@ export default function Navbar() {
       { label: "Detention", href: "/detention" },
       { label: "Shipments", href: "/shipments" },
       { label: 'Add Driver', href: '/create-driver' },
+      { label: 'Drivers', href: '/drivers' },
     ]
   
     const driverLinks = [{ label: "My View", href: "/driver" }]
