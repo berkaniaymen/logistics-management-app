@@ -16,7 +16,11 @@ export default function Navbar() {
       { label: 'Drivers', href: '/drivers' },
     ]
   
-    const driverLinks = [{ label: "My View", href: "/driver" }]
+    const driverLinks = [
+        { label: 'My View', href: '/driver' },
+        { label: 'History', href: '/history' },
+        { label: 'Profile', href: '/profile' },
+      ]
   
     const links = role === "driver" ? driverLinks : dispatcherLinks
   
