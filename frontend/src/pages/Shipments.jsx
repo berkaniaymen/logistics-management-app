@@ -5,14 +5,16 @@ import api from '../api/axios'
 export default function Shipments() {
   const [shipments, setShipments] = useState([])
   const [showForm, setShowForm] = useState(false)
-  const [newShipment, setNewShipment] = useState({ origin: '', destination: '', status: 'pending' })
+  const [form, setForm] = useState({ origin: '', destination: '', status: 'pending' })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const fetchShipments = async () => {
     try {
-      const response = await api.get('/shipments/')  // added trailing slash
-      setShipments(response.data)
+      const res = await api.get('/shipments/')
+      setShipments(res.data)
     } catch (err) {
-      console.error('Failed to fetch shipments', err)
+      console.error(err)
     }
   }
 
@@ -21,114 +23,148 @@ export default function Shipments() {
   }, [])
 
   const handleCreate = async () => {
+    setError('')
+    if (!form.origin || !form.destination) {
+      setError('Origin and destination are required')
+      return
+    }
+    setLoading(true)
     try {
-      await api.post('/shipments/', newShipment)  // added trailing slash
-      setNewShipment({ origin: '', destination: '', status: 'pending' })
+      await api.post('/shipments/', form)
+      setForm({ origin: '', destination: '', status: 'pending' })
       setShowForm(false)
       fetchShipments()
     } catch (err) {
-      console.error('Failed to create shipment', err)
+      setError(err.response?.data?.detail || 'Something went wrong')
     }
+    setLoading(false)
   }
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/shipments/${id}`)
+      await api.delete('/shipments/' + id)
       fetchShipments()
     } catch (err) {
-      console.error('Failed to delete shipment', err)
+      console.error(err)
     }
   }
 
-  const statusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'in_transit': return 'bg-blue-100 text-blue-800'
-      case 'delivered': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+  const statusStyle = (status) => {
+    const styles = {
+      pending: { background: '#fbbf2420', color: '#fbbf24', border: '1px solid #fbbf2440' },
+      in_transit: { background: '#3b82f620', color: '#60a5fa', border: '1px solid #3b82f640' },
+      delivered: { background: '#10b98120', color: '#34d399', border: '1px solid #10b98140' },
     }
+    return styles[status] || styles.pending
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <Navbar />
       <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Shipments</h2>
+
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 style={{ color: '#e2e8f0', fontSize: '24px', fontWeight: '700' }}>Shipments</h2>
+            <p style={{ color: '#8892a4' }} className="text-sm mt-1">Track and manage all shipments.</p>
+          </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            style={{ background: '#3b82f6' }}
+            className="text-white text-sm font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition"
           >
             + New Shipment
           </button>
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-4">Create New Shipment</h3>
+          <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-6 mb-6 space-y-4">
+            <h3 style={{ color: '#e2e8f0' }} className="font-bold">Create New Shipment</h3>
+
+            {error && (
+              <div style={{ background: '#ef444420', border: '1px solid #ef444440', color: '#f87171' }} className="rounded-lg px-4 py-3 text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                className="border border-gray-300 rounded px-3 py-2"
-                placeholder="Origin"
-                value={newShipment.origin}
-                onChange={(e) => setNewShipment({ ...newShipment, origin: e.target.value })}
-              />
-              <input
-                className="border border-gray-300 rounded px-3 py-2"
-                placeholder="Destination"
-                value={newShipment.destination}
-                onChange={(e) => setNewShipment({ ...newShipment, destination: e.target.value })}
-              />
-              <select
-                className="border border-gray-300 rounded px-3 py-2"
-                value={newShipment.status}
-                onChange={(e) => setNewShipment({ ...newShipment, status: e.target.value })}
-              >
-                <option value="pending">Pending</option>
-                <option value="in_transit">In Transit</option>
-                <option value="delivered">Delivered</option>
-              </select>
+              <div>
+                <label style={{ color: '#8892a4' }} className="text-xs uppercase tracking-widest font-semibold block mb-2">Origin</label>
+                <input
+                  type="text"
+                  placeholder="Chicago, IL"
+                  value={form.origin}
+                  onChange={(e) => setForm({ ...form, origin: e.target.value })}
+                  style={{ background: '#0f1420', border: '1px solid #2a3147', color: '#e2e8f0' }}
+                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label style={{ color: '#8892a4' }} className="text-xs uppercase tracking-widest font-semibold block mb-2">Destination</label>
+                <input
+                  type="text"
+                  placeholder="Dallas, TX"
+                  value={form.destination}
+                  onChange={(e) => setForm({ ...form, destination: e.target.value })}
+                  style={{ background: '#0f1420', border: '1px solid #2a3147', color: '#e2e8f0' }}
+                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label style={{ color: '#8892a4' }} className="text-xs uppercase tracking-widest font-semibold block mb-2">Status</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  style={{ background: '#0f1420', border: '1px solid #2a3147', color: '#e2e8f0' }}
+                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in_transit">In Transit</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+              </div>
             </div>
             <button
               onClick={handleCreate}
-              className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              disabled={loading}
+              style={{ background: loading ? '#2a3147' : '#10b981' }}
+              className="text-white text-sm font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition"
             >
-              Create Shipment
+              {loading ? 'Creating...' : 'Create Shipment'}
             </button>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead style={{ background: '#0f1420' }}>
               <tr>
-                <th className="text-left px-6 py-3 text-gray-600">ID</th>
-                <th className="text-left px-6 py-3 text-gray-600">Origin</th>
-                <th className="text-left px-6 py-3 text-gray-600">Destination</th>
-                <th className="text-left px-6 py-3 text-gray-600">Status</th>
-                <th className="text-left px-6 py-3 text-gray-600">Actions</th>
+                {['ID', 'Origin', 'Destination', 'Status', 'Actions'].map((h) => (
+                  <th key={h} style={{ color: '#8892a4' }} className="text-left px-5 py-3 text-xs uppercase tracking-widest font-semibold">{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {shipments.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-8 text-gray-400">No shipments found</td>
+                  <td colSpan="5" style={{ color: '#8892a4' }} className="text-center py-12 text-sm">No shipments found</td>
                 </tr>
               ) : (
-                shipments.map((shipment) => (
-                  <tr key={shipment.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 text-gray-700">#{shipment.id}</td>
-                    <td className="px-6 py-4 text-gray-700">{shipment.origin}</td>
-                    <td className="px-6 py-4 text-gray-700">{shipment.destination}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(shipment.status)}`}>
-                        {shipment.status}
+                shipments.map((s) => (
+                  <tr key={s.id} style={{ borderTop: '1px solid #2a3147' }}>
+                    <td style={{ color: '#60a5fa' }} className="px-5 py-4 font-mono text-sm font-bold">#{s.id}</td>
+                    <td style={{ color: '#e2e8f0' }} className="px-5 py-4 text-sm">{s.origin}</td>
+                    <td style={{ color: '#e2e8f0' }} className="px-5 py-4 text-sm">{s.destination}</td>
+                    <td className="px-5 py-4">
+                      <span style={statusStyle(s.status)} className="px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide">
+                        {s.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       <button
-                        onClick={() => handleDelete(shipment.id)}
-                        className="text-red-500 hover:text-red-700 transition"
+                        onClick={() => handleDelete(s.id)}
+                        style={{ color: '#f87171' }}
+                        className="text-sm hover:opacity-70 transition"
                       >
                         Delete
                       </button>
@@ -139,6 +175,7 @@ export default function Shipments() {
             </tbody>
           </table>
         </div>
+
       </div>
     </div>
   )
