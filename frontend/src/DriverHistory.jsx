@@ -47,6 +47,16 @@ export default function DriverHistory() {
     }
   }
 
+  const handleRequestPayment = async (eventId) => {
+    try {
+      await api.post('/detention/' + eventId + '/request-payment')
+      const res = await api.get('/detention/driver/' + driverId)
+      setEvents(res.data.reverse())
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Something went wrong')
+    }
+  }
+
   const totalEarned = events
     .filter((e) => e.status === 'completed')
     .reduce((sum, e) => sum + e.detention_amount, 0)
@@ -65,7 +75,6 @@ export default function DriverHistory() {
           <p style={{ color: '#8892a4' }} className="text-sm mt-1">All your past detention events and amounts owed.</p>
         </div>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-5">
             <div style={{ color: '#8892a4' }} className="text-xs uppercase tracking-widest font-semibold mb-2">Total Events</div>
@@ -143,15 +152,36 @@ export default function DriverHistory() {
                     </div>
                   )}
 
-                  {!isActive && (
-                    <button
-                      onClick={() => handleDownloadReport(event.id)}
-                      style={{ color: '#60a5fa' }}
-                      className="text-sm hover:opacity-70 transition"
-                    >
-                      📄 Download PDF Report
-                    </button>
-                  )}
+                  <div className="flex items-center gap-4" style={{ borderTop: '1px solid #2a3147', paddingTop: '12px' }}>
+                    {!isActive && (
+                      <button
+                        onClick={() => handleDownloadReport(event.id)}
+                        style={{ color: '#60a5fa' }}
+                        className="text-sm hover:opacity-70 transition"
+                      >
+                        📄 Download PDF Report
+                      </button>
+                    )}
+                    {!isActive && event.detention_amount > 0 && (
+                      <button
+                        onClick={() => handleRequestPayment(event.id)}
+                        disabled={event.payment_status === 'requested' || event.payment_status === 'paid'}
+                        style={{
+                          background: event.payment_status === 'requested' ? '#fbbf2420' :
+                                      event.payment_status === 'paid' ? '#10b98120' : '#3b82f620',
+                          color: event.payment_status === 'requested' ? '#fbbf24' :
+                                 event.payment_status === 'paid' ? '#34d399' : '#60a5fa',
+                          border: '1px solid ' + (event.payment_status === 'requested' ? '#fbbf2440' :
+                                                   event.payment_status === 'paid' ? '#10b98140' : '#3b82f640'),
+                        }}
+                        className="text-sm px-3 py-1 rounded-lg font-semibold hover:opacity-80 transition"
+                      >
+                        {event.payment_status === 'requested' ? '⏳ Payment Requested' :
+                         event.payment_status === 'paid' ? '✅ Paid' : '💰 Request Payment'}
+                      </button>
+                    )}
+                  </div>
+
                 </div>
               )
             })}

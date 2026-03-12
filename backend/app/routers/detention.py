@@ -75,6 +75,27 @@ def checkout(event_id: int, data: schemas.DetentionCheckout,
     db.refresh(event)
     return event
 
+@router.post("/{event_id}/request-payment")
+def request_payment(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_driver)
+):
+    event = db.query(models.DetentionEvent).filter(
+        models.DetentionEvent.id == event_id).first()
+    if not event:
+        raise NotFoundError("Detention event")
+    if event.driver_id != current_user.driver_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if event.status != "completed":
+        raise HTTPException(status_code=400, detail="Can only request payment for completed events")
+    if event.payment_status == "requested":
+        raise HTTPException(status_code=400, detail="Payment already requested")
+    event.payment_status = "requested"
+    db.commit()
+    db.refresh(event)
+    return {"message": "Payment request sent successfully"}
+
 @router.get("/active")
 def get_active(db: Session = Depends(get_db),
                current_user=Depends(require_dispatcher)):

@@ -86,3 +86,4 @@ class DetentionEvent(Base):
     status = Column(String, default="active")
     notes = Column(String, nullable=True)
     load = relationship("Load", back_populates="detention_events")
+    payment_status = Column(String, default="none")  # none, requested, paid

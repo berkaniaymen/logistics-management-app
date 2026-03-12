@@ -179,3 +179,20 @@ class CreateDriverAccount(BaseModel):
     username: str
     password: str
     driver_id: int
+
+class DetentionEvent(BaseModel):
+    id: int
+    load_id: int
+    driver_id: int
+    checkin_time: datetime
+    checkout_time: Optional[datetime] = None
+    free_time_minutes: int
+    detention_rate: float
+    detention_minutes: int
+    detention_amount: float
+    status: str
+    payment_status: Optional[str] = "none"
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
