@@ -8,6 +8,7 @@ export default function DriverView() {
   const [elapsed, setElapsed] = useState(0)
   const [loading, setLoading] = useState(false)
   const [selectedLoad, setSelectedLoad] = useState('')
+  const [alert, setAlert] = useState(null)
 
   const driverId = parseInt(localStorage.getItem('driver_id'))
 
@@ -49,13 +50,28 @@ export default function DriverView() {
   }, [activeEvent])
 
   useEffect(() => {
-    if (activeEvent) {
-      const freeTimeRemaining = Math.max(0, activeEvent.free_time_minutes - elapsed)
-      if (freeTimeRemaining === 0 && Notification.permission === 'granted') {
+    if (!activeEvent) return
+
+    const freeTimeRemaining = Math.max(0, activeEvent.free_time_minutes - elapsed)
+
+    if (freeTimeRemaining === 0) {
+      // Detention started
+      setAlert({ type: 'danger', message: '🔴 Detention has started! You are now accruing charges at $50/hour.' })
+      if (Notification.permission === 'granted') {
         new Notification('Detention Started!', {
           body: 'Free time has expired. Detention clock is now running.',
         })
       }
+    } else if (freeTimeRemaining <= 30) {
+      // 30 min warning
+      setAlert({ type: 'warning', message: '⚠️ Warning: Only ' + freeTimeRemaining + ' minutes of free time remaining!' })
+      if (Notification.permission === 'granted') {
+        new Notification('Free Time Running Out!', {
+          body: freeTimeRemaining + ' minutes of free time remaining.',
+        })
+      }
+    } else {
+      setAlert(null)
     }
   }, [elapsed])
 
@@ -86,11 +102,28 @@ export default function DriverView() {
       await api.post('/detention/checkout/' + activeEvent.id + '/', {})
       setActiveEvent(null)
       setElapsed(0)
+      setAlert(null)
       fetchLoads()
     } catch (err) {
       console.error(err)
     }
     setLoading(false)
+  }
+
+  const handleDownloadReport = async () => {
+    if (!activeEvent) return
+    try {
+      const res = await api.get('/detention/' + activeEvent.id + '/report', { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'detention-report-' + activeEvent.id + '.pdf')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const formatTime = (minutes) => {
@@ -116,23 +149,30 @@ export default function DriverView() {
       <div className="p-8 max-w-xl mx-auto">
 
         <div className="mb-8">
-          <h2 style={{ color: '#e2e8f0', fontSize: '24px', fontWeight: '700' }}>
-            Driver Portal
-          </h2>
-          <p style={{ color: '#8892a4' }} className="text-sm mt-1">
-            Check in when you arrive at a shipper. Check out when you leave.
-          </p>
+          <h2 style={{ color: '#e2e8f0', fontSize: '24px', fontWeight: '700' }}>Driver Portal</h2>
+          <p style={{ color: '#8892a4' }} className="text-sm mt-1">Check in when you arrive. Check out when you leave.</p>
         </div>
+
+        {/* Alert Banner */}
+        {alert && (
+          <div
+            style={{
+              background: alert.type === 'danger' ? '#ef444420' : '#fbbf2420',
+              border: '1px solid ' + (alert.type === 'danger' ? '#ef444460' : '#fbbf2460'),
+              color: alert.type === 'danger' ? '#f87171' : '#fbbf24',
+            }}
+            className="rounded-xl px-4 py-3 text-sm font-semibold mb-6 flex items-center justify-between"
+          >
+            <span>{alert.message}</span>
+            <button onClick={() => setAlert(null)} style={{ color: 'inherit', opacity: 0.6 }} className="ml-4 hover:opacity-100 transition">✕</button>
+          </div>
+        )}
 
         {!activeEvent ? (
           <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-6 space-y-4">
-            <h3 style={{ color: '#e2e8f0' }} className="font-semibold text-lg">
-              Select a Load to Check In
-            </h3>
+            <h3 style={{ color: '#e2e8f0' }} className="font-semibold text-lg">Select a Load to Check In</h3>
             {loads.length === 0 ? (
-              <div style={{ color: '#8892a4' }} className="text-sm py-4 text-center">
-                No loads assigned to you yet.
-              </div>
+              <div style={{ color: '#8892a4' }} className="text-sm py-4 text-center">No loads assigned to you yet.</div>
             ) : (
               <select
                 value={selectedLoad}
@@ -160,7 +200,10 @@ export default function DriverView() {
         ) : (
           <div className="space-y-4">
             <div
-              style={{ background: isInDetention ? '#ef444420' : '#3b82f620', border: '1px solid ' + (isInDetention ? '#ef444440' : '#3b82f640') }}
+              style={{
+                background: isInDetention ? '#ef444420' : '#3b82f620',
+                border: '1px solid ' + (isInDetention ? '#ef444440' : '#3b82f640'),
+              }}
               className="rounded-xl p-6 text-center"
             >
               <div style={{ color: isInDetention ? '#f87171' : '#60a5fa' }} className="text-xs uppercase tracking-widest font-bold mb-2">
@@ -199,6 +242,14 @@ export default function DriverView() {
               className="w-full text-white font-bold py-3 rounded-xl text-lg hover:opacity-90 transition"
             >
               {loading ? 'Checking Out...' : '🚛 CHECK OUT — I Am Leaving'}
+            </button>
+
+            <button
+              onClick={handleDownloadReport}
+              style={{ background: '#1a1f2e', border: '1px solid #2a3147', color: '#60a5fa' }}
+              className="w-full font-semibold py-3 rounded-xl text-sm hover:opacity-80 transition"
+            >
+              📄 Download Current Report
             </button>
           </div>
         )}
