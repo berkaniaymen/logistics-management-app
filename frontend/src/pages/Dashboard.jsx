@@ -16,12 +16,15 @@ function StatCard({ label, value, icon, accent }) {
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [paymentRequests, setPaymentRequests] = useState([])
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await api.get('/detention/stats/summary')
         setStats(res.data)
+        const paymentsRes = await api.get('/detention/payment-requests')
+        setPaymentRequests(paymentsRes.data)
       } catch (err) {
         console.error('Failed to fetch stats', err)
       }
@@ -103,6 +106,44 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Payment Requests Alert */}
+        {paymentRequests.length > 0 && (
+          <div>
+            <h3 style={{ color: "#f87171" }} className="text-lg font-bold mb-4">
+              💰 Pending Payment Requests
+              <span style={{ background: '#ef4444', color: 'white', fontSize: '12px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px' }} className="ml-2">
+                {paymentRequests.length}
+              </span>
+            </h3>
+            <div style={{ background: "#1a1f2e", border: "1px solid #ef444440" }} className="rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead style={{ background: "#0f1420" }}>
+                  <tr>
+                    {["Driver", "Load", "Detention", "Amount", "Action"].map(h => (
+                      <th key={h} style={{ color: "#8892a4" }} className="text-left px-5 py-3 text-xs uppercase tracking-widest font-semibold">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {paymentRequests.map((r) => (
+                    <tr key={r.id} style={{ borderTop: "1px solid #2a3147" }}>
+                      <td style={{ color: "#e2e8f0" }} className="px-5 py-4 font-medium text-sm">{r.driver_name}</td>
+                      <td style={{ color: "#8892a4" }} className="px-5 py-4 text-sm">{r.load_number}</td>
+                      <td style={{ color: "#fb923c" }} className="px-5 py-4 text-sm font-semibold">{r.detention_minutes}m</td>
+                      <td style={{ color: "#f87171" }} className="px-5 py-4 font-bold">${r.detention_amount.toFixed(2)}</td>
+                      <td className="px-5 py-4">
+                        <a href="/payments" style={{ color: "#60a5fa" }} className="text-sm hover:opacity-70 transition">
+                          View →
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Recent Events Table */}
         <div>
           <h3 style={{ color: "#e2e8f0" }} className="text-lg font-bold mb-4">Recent Detention Events</h3>
@@ -172,6 +213,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   )

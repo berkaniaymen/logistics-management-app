@@ -8,6 +8,7 @@ import DetentionDashboard from './pages/DetentionDashboard'
 import CreateDriverAccount from './pages/CreateDriverAccount'
 import Drivers from './pages/Drivers'
 import DriverProfile from './pages/DriverProfile'
+import Payments from './pages/Payments'
 import DriverHistory from './pages/DriverHistory'
 
 
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/drivers" element={<PrivateRoute><Drivers /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><DriverProfile /></PrivateRoute>} />
         <Route path="/history" element={<PrivateRoute><DriverHistory /></PrivateRoute>} />
+        <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   )

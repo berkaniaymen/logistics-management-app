@@ -96,6 +96,47 @@ def request_payment(
     db.refresh(event)
     return {"message": "Payment request sent successfully"}
 
+@router.get("/payment-requests")
+def get_payment_requests(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_dispatcher)
+):
+    events = db.query(models.DetentionEvent).filter(
+        models.DetentionEvent.payment_status == "requested"
+    ).all()
+    result = []
+    for event in events:
+        driver = db.query(models.Driver).filter(models.Driver.id == event.driver_id).first()
+        load = db.query(models.Load).filter(models.Load.id == event.load_id).first()
+        result.append({
+            "id": event.id,
+            "driver_id": event.driver_id,
+            "driver_name": driver.name if driver else "Unknown",
+            "load_id": event.load_id,
+            "load_number": load.load_number if load else "Unknown",
+            "detention_minutes": event.detention_minutes,
+            "detention_amount": event.detention_amount,
+            "payment_status": event.payment_status,
+            "checkin_time": event.checkin_time,
+            "checkout_time": event.checkout_time,
+        })
+    return result
+
+@router.post("/{event_id}/mark-paid")
+def mark_paid(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_dispatcher)
+):
+    event = db.query(models.DetentionEvent).filter(
+        models.DetentionEvent.id == event_id).first()
+    if not event:
+        raise NotFoundError("Detention event")
+    event.payment_status = "paid"
+    db.commit()
+    db.refresh(event)
+    return {"message": "Marked as paid"}
+
 @router.get("/active")
 def get_active(db: Session = Depends(get_db),
                current_user=Depends(require_dispatcher)):
