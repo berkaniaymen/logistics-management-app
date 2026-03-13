@@ -34,6 +34,7 @@ export default function Navbar() {
     { label: "Drivers", href: "/drivers" },
     { label: "Add Driver", href: "/create-driver" },
     { label: "Payments", href: "/payments", badge: paymentCount },
+    { label: 'Customers', href: '/customers' },
   ]
 
   const driverLinks = [

@@ -83,7 +83,7 @@ export default function DriverView() {
       const res = await api.post('/detention/checkin/', {
         load_id: parseInt(selectedLoad),
         driver_id: driverId,
-        free_time_minutes: 120,
+        free_time_minutes: 20,
         detention_rate: 50.0,
       })
       setActiveEvent({ ...res.data, elapsed_minutes: 0, free_time_remaining: 120 })

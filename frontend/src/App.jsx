@@ -10,6 +10,7 @@ import Drivers from './pages/Drivers'
 import DriverProfile from './pages/DriverProfile'
 import Payments from './pages/Payments'
 import DriverHistory from './pages/DriverHistory'
+import Customers from './pages/Customers'
 
 
 function PrivateRoute({ children }) {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/profile" element={<PrivateRoute><DriverProfile /></PrivateRoute>} />
         <Route path="/history" element={<PrivateRoute><DriverHistory /></PrivateRoute>} />
         <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
+        <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   )
