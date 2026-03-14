@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function Customers() {
@@ -50,8 +50,7 @@ export default function Customers() {
   }
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8">
 
         <div className="flex items-center justify-between mb-8">
@@ -169,6 +168,6 @@ export default function Customers() {
         </div>
 
       </div>
-    </div>
+    </Layout>
   )
 }

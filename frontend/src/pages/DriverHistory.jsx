@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function DriverHistory() {
@@ -66,8 +66,7 @@ export default function DriverHistory() {
     .reduce((sum, e) => sum + e.detention_minutes, 0)
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8 max-w-3xl mx-auto">
 
         <div className="mb-8">
@@ -189,6 +188,6 @@ export default function DriverHistory() {
         )}
 
       </div>
-    </div>
+    </Layout>
   )
 }

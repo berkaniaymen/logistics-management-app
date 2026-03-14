@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function Payments() {
@@ -52,8 +52,7 @@ export default function Payments() {
   const totalRequested = requests.reduce((sum, r) => sum + r.detention_amount, 0)
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8">
 
         <div className="flex items-center justify-between mb-8">
@@ -70,7 +69,6 @@ export default function Payments() {
           </button>
         </div>
 
-        {/* Summary */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-5">
             <div style={{ color: '#8892a4' }} className="text-xs uppercase tracking-widest font-semibold mb-2">Pending Requests</div>
@@ -136,6 +134,6 @@ export default function Payments() {
         )}
 
       </div>
-    </div>
+    </Layout>
   )
 }

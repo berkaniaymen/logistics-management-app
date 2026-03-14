@@ -1,17 +1,18 @@
-import { useEffect, useState } from "react"
-import api from "../api/axios"
+import { useEffect, useState } from 'react'
+import api from '../api/axios'
 
 export default function Navbar() {
-  const role = localStorage.getItem("role")
+  const role = localStorage.getItem('role')
   const path = window.location.pathname
   const [paymentCount, setPaymentCount] = useState(0)
+  const [open, setOpen] = useState(true)
 
   useEffect(() => {
-    if (role !== "dispatcher") return
+    if (role !== 'dispatcher') return
 
     const fetchCount = async () => {
       try {
-        const res = await api.get("/detention/payment-requests")
+        const res = await api.get('/detention/payment-requests')
         setPaymentCount(res.data.length)
       } catch (err) {
         console.error(err)
@@ -23,92 +24,182 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.clear()
-    window.location.href = "/"
+    window.location.href = '/'
   }
 
   const dispatcherLinks = [
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Loads", href: "/loads" },
-    { label: "Detention", href: "/detention" },
-    { label: "Shipments", href: "/shipments" },
-    { label: "Drivers", href: "/drivers" },
-    { label: "Add Driver", href: "/create-driver" },
-    { label: "Payments", href: "/payments", badge: paymentCount },
-    { label: 'Customers', href: '/customers' },
-    { label: 'Warehouses', href: '/warehouses' },
+    { label: 'Dashboard', href: '/dashboard', icon: '📊' },
+    { label: 'Loads', href: '/loads', icon: '📦' },
+    { label: 'Detention', href: '/detention', icon: '⏱' },
+    { label: 'Shipments', href: '/shipments', icon: '🚢' },
+    { label: 'Drivers', href: '/drivers', icon: '🚛' },
+    { label: 'Customers', href: '/customers', icon: '👥' },
+    { label: 'Warehouses', href: '/warehouses', icon: '🏢' },
+    { label: 'Add Driver', href: '/create-driver', icon: '➕' },
+    { label: 'Payments', href: '/payments', icon: '💰', badge: paymentCount },
   ]
 
   const driverLinks = [
-    { label: "My View", href: "/driver" },
-    { label: "History", href: "/history" },
-    { label: "Profile", href: "/profile" },
+    { label: 'My View', href: '/driver', icon: '🚛' },
+    { label: 'History', href: '/history', icon: '📋' },
+    { label: 'Profile', href: '/profile', icon: '👤' },
   ]
 
-  const links = role === "driver" ? driverLinks : dispatcherLinks
+  const links = role === 'driver' ? driverLinks : dispatcherLinks
 
   return (
-    <div
-      className="px-8 py-4 flex items-center justify-between"
-      style={{ background: "#1a1f2e", borderBottom: "1px solid #2a3147" }}
-    >
-      <div>
-        <div style={{ color: "#e2e8f0", fontSize: "20px", fontWeight: "700" }}>
-          🚚 LogiTrack
-        </div>
-        <div style={{ color: "#8892a4", fontSize: "11px" }}>
-          {role === "driver" ? "Driver Portal" : "Dispatcher Portal"}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-6">
-        {links.map((item) => {
-          const isActive = path === item.href
-
-          return (
-            <a
-              key={item.label}
-              href={item.href}
-              className="text-sm font-medium transition flex items-center gap-1"
-              style={{
-                color: isActive ? "#60a5fa" : "#8892a4",
-                borderBottom: isActive
-                  ? "2px solid #60a5fa"
-                  : "2px solid transparent",
-                paddingBottom: "2px",
-              }}
-            >
-              {item.label}
-
-              {item.badge && item.badge > 0 && (
-                <span
-                  style={{
-                    background: "#ef4444",
-                    color: "white",
-                    fontSize: "10px",
-                    fontWeight: "700",
-                    padding: "1px 6px",
-                    borderRadius: "999px",
-                  }}
-                >
-                  {item.badge}
-                </span>
-              )}
-            </a>
-          )
-        })}
-
-        <button
-          onClick={handleLogout}
-          className="text-sm font-semibold px-3 py-1.5 rounded-lg transition"
+    <>
+      {/* Sidebar */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          height: '100vh',
+          width: open ? '220px' : '60px',
+          background: '#1a1f2e',
+          borderRight: '1px solid #2a3147',
+          transition: 'width 0.2s ease',
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Logo + Toggle */}
+        <div
           style={{
-            background: "#ef444420",
-            color: "#f87171",
-            border: "1px solid #ef444440",
+            padding: '16px 12px',
+            borderBottom: '1px solid #2a3147',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            minHeight: '64px',
           }}
         >
-          Logout
-        </button>
+          {open && (
+            <div>
+              <div
+                style={{
+                  color: '#e2e8f0',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                🚚 LogiTrack
+              </div>
+              <div
+                style={{
+                  color: '#8892a4',
+                  fontSize: '10px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {role === 'driver' ? 'Driver Portal' : 'Dispatcher Portal'}
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={() => setOpen(!open)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#8892a4',
+              cursor: 'pointer',
+              fontSize: '18px',
+              padding: '4px',
+              marginLeft: open ? '0' : 'auto',
+              marginRight: open ? '0' : 'auto',
+            }}
+          >
+            ☰
+          </button>
+        </div>
+
+        {/* Links */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+          {links.map((item) => {
+            const isActive = path === item.href
+
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 16px',
+                  color: isActive ? '#60a5fa' : '#8892a4',
+                  background: isActive ? '#3b82f620' : 'transparent',
+                  borderLeft: isActive
+                    ? '3px solid #60a5fa'
+                    : '3px solid transparent',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: isActive ? '600' : '400',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <span style={{ fontSize: '16px', flexShrink: 0 }}>
+                  {item.icon}
+                </span>
+
+                {open && <span style={{ flex: 1 }}>{item.label}</span>}
+
+                {open && item.badge && item.badge > 0 && (
+                  <span
+                    style={{
+                      background: '#ef4444',
+                      color: 'white',
+                      fontSize: '10px',
+                      fontWeight: '700',
+                      padding: '1px 6px',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </a>
+            )
+          })}
+        </div>
+
+        {/* Logout */}
+        <div style={{ padding: '12px', borderTop: '1px solid #2a3147' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              background: '#ef444420',
+              color: '#f87171',
+              border: '1px solid #ef444440',
+              borderRadius: '8px',
+              padding: '8px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+            }}
+          >
+            {open ? 'Logout' : '🚪'}
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Page offset */}
+      <div
+        style={{
+          marginLeft: open ? '220px' : '60px',
+          transition: 'margin-left 0.2s ease',
+        }}
+        id="sidebar-offset"
+      />
+    </>
   )
 }

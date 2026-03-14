@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function DriverView() {
@@ -51,24 +51,16 @@ export default function DriverView() {
 
   useEffect(() => {
     if (!activeEvent) return
-
     const freeTimeRemaining = Math.max(0, activeEvent.free_time_minutes - elapsed)
-
     if (freeTimeRemaining === 0) {
-      // Detention started
       setAlert({ type: 'danger', message: '🔴 Detention has started! You are now accruing charges at $50/hour.' })
       if (Notification.permission === 'granted') {
-        new Notification('Detention Started!', {
-          body: 'Free time has expired. Detention clock is now running.',
-        })
+        new Notification('Detention Started!', { body: 'Free time has expired. Detention clock is now running.' })
       }
     } else if (freeTimeRemaining <= 30) {
-      // 30 min warning
       setAlert({ type: 'warning', message: '⚠️ Warning: Only ' + freeTimeRemaining + ' minutes of free time remaining!' })
       if (Notification.permission === 'granted') {
-        new Notification('Free Time Running Out!', {
-          body: freeTimeRemaining + ' minutes of free time remaining.',
-        })
+        new Notification('Free Time Running Out!', { body: freeTimeRemaining + ' minutes of free time remaining.' })
       }
     } else {
       setAlert(null)
@@ -83,7 +75,7 @@ export default function DriverView() {
       const res = await api.post('/detention/checkin/', {
         load_id: parseInt(selectedLoad),
         driver_id: driverId,
-        free_time_minutes: 20,
+        free_time_minutes: 120,
         detention_rate: 50.0,
       })
       setActiveEvent({ ...res.data, elapsed_minutes: 0, free_time_remaining: 120 })
@@ -132,20 +124,13 @@ export default function DriverView() {
     return h + 'h ' + m + 'm'
   }
 
-  const freeTimeRemaining = activeEvent
-    ? Math.max(0, activeEvent.free_time_minutes - elapsed)
-    : 120
-
-  const detentionMinutes = activeEvent
-    ? Math.max(0, elapsed - activeEvent.free_time_minutes)
-    : 0
-
+  const freeTimeRemaining = activeEvent ? Math.max(0, activeEvent.free_time_minutes - elapsed) : 120
+  const detentionMinutes = activeEvent ? Math.max(0, elapsed - activeEvent.free_time_minutes) : 0
   const detentionAmount = ((detentionMinutes / 60) * 50).toFixed(2)
   const isInDetention = freeTimeRemaining === 0
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8 max-w-xl mx-auto">
 
         <div className="mb-8">
@@ -153,7 +138,6 @@ export default function DriverView() {
           <p style={{ color: '#8892a4' }} className="text-sm mt-1">Check in when you arrive. Check out when you leave.</p>
         </div>
 
-        {/* Alert Banner */}
         {alert && (
           <div
             style={{
@@ -254,6 +238,6 @@ export default function DriverView() {
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   )
 }

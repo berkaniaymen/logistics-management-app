@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function LoadsManager() {
@@ -73,8 +73,7 @@ export default function LoadsManager() {
   }
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8">
 
         <div className="flex items-center justify-between mb-8">
@@ -206,6 +205,6 @@ export default function LoadsManager() {
         </div>
 
       </div>
-    </div>
+    </Layout>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function DriverProfile() {
@@ -23,25 +23,22 @@ export default function DriverProfile() {
 
   if (loading) {
     return (
-      <div style={{ background: '#0f1420', minHeight: '100vh' }}>
-        <Navbar />
+      <Layout>
         <div style={{ color: '#8892a4' }} className="text-center py-16 text-sm">Loading...</div>
-      </div>
+      </Layout>
     )
   }
 
   if (!driver) {
     return (
-      <div style={{ background: '#0f1420', minHeight: '100vh' }}>
-        <Navbar />
+      <Layout>
         <div style={{ color: '#f87171' }} className="text-center py-16 text-sm">Failed to load profile.</div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8 max-w-xl mx-auto">
 
         <div className="mb-8">
@@ -49,7 +46,6 @@ export default function DriverProfile() {
           <p style={{ color: '#8892a4' }} className="text-sm mt-1">Your driver information on file.</p>
         </div>
 
-        {/* Avatar + Name */}
         <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-6 mb-4 flex items-center gap-5">
           <div style={{ background: '#3b82f620', color: '#60a5fa', width: '72px', height: '72px', fontSize: '28px', fontWeight: '700' }} className="rounded-full flex items-center justify-center flex-shrink-0">
             {driver.name[0]}
@@ -60,7 +56,6 @@ export default function DriverProfile() {
           </div>
         </div>
 
-        {/* Info Cards */}
         <div style={{ background: '#1a1f2e', border: '1px solid #2a3147' }} className="rounded-xl p-6 space-y-4">
           {[
             { label: 'Phone', value: driver.phone, icon: '📞' },
@@ -87,6 +82,6 @@ export default function DriverProfile() {
         </div>
 
       </div>
-    </div>
+    </Layout>
   )
 }

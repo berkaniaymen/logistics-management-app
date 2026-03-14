@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import api from '../api/axios'
 
 export default function CreateDriverAccount() {
@@ -50,8 +50,7 @@ export default function CreateDriverAccount() {
   }
 
   return (
-    <div style={{ background: '#0f1420', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <Navbar />
+    <Layout>
       <div className="p-8 max-w-lg mx-auto">
         <div className="mb-8">
           <h2 style={{ color: '#e2e8f0', fontSize: '24px', fontWeight: '700' }}>
@@ -148,6 +147,6 @@ export default function CreateDriverAccount() {
 
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }
